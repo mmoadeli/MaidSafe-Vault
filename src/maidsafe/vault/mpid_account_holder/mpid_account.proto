@@ -1,0 +1,23 @@
+package maidsafe.vault.protobuf;
+option optimize_for = LITE_RUNTIME;
+
+// Contact stored in MPAH for an account
+message Contact {
+  required bytes mpid_name = 1;
+  required int32 rank = 2;
+}
+
+// OfflineMsg sent to the MPAH from the contact
+message OfflineMsg {
+  required int32 type = 1;
+  required bytes contact_from = 2;
+  required bytes content = 3;
+  required bytes time_stamp = 4;
+}
+
+message MpidAccount {
+  required bytes mpid_name = 1;
+  repeated Contact white_list = 2;
+  repeated Contact black_list = 3;
+  repeated OfflineMsg offline_msgs = 4;
+}
