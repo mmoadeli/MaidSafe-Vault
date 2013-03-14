@@ -20,7 +20,7 @@
 #include "boost/filesystem/path.hpp"
 
 #include "maidsafe/common/types.h"
-#include "maidsafe/nfs/pmid_registration.h"
+#include "maidsafe/nfs/fob_pair_registration.h"
 
 #include "maidsafe/vault/maid_account_holder/maid_account.h"
 #include "maidsafe/vault/types.h"

@@ -15,12 +15,13 @@
 #include <cstdint>
 #include <deque>
 #include <vector>
+#include <utility>
 
 #include "boost/filesystem/path.hpp"
 
 #include "maidsafe/common/types.h"
 #include "maidsafe/data_types/data_name_variant.h"
-#include "maidsafe/nfs/pmid_registration.h"
+#include "maidsafe/nfs/fob_pair_registration.h"
 
 #include "maidsafe/vault/disk_based_storage.h"
 #include "maidsafe/vault/parameters.h"
@@ -114,7 +115,6 @@ class MaidAccount {
   friend class test::MaidAccountHandlerTypedTest;
 
  private:
-
   MaidAccount(const MaidAccount&);
   MaidAccount& operator=(const MaidAccount&);
   MaidAccount(MaidAccount&&);
