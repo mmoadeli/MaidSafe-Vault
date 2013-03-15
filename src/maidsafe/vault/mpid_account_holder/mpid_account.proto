@@ -17,7 +17,8 @@ message OfflineMsg {
 
 message MpidAccount {
   required bytes mpid_name = 1;
-  repeated Contact white_list = 2;
-  repeated Contact black_list = 3;
-  repeated OfflineMsg offline_msgs = 4;
+  required bytes serialised_mpid_registration = 2;
+  repeated Contact white_list = 3;
+  repeated Contact black_list = 4;
+  repeated OfflineMsg offline_msgs = 5;
 }
