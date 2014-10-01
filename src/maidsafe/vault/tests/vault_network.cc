@@ -18,6 +18,10 @@
 
 #include "maidsafe/vault/tests/vault_network.h"
 
+#ifndef MAIDSAFE_WIN32
+#include <ulimit.h>
+#endif
+
 #include <algorithm>
 #include <string>
 
@@ -42,7 +46,17 @@ VaultNetwork::VaultNetwork()
     : vaults_(),
       clients_(),
       public_pmids_(),
-      vault_dir_(fs::unique_path((fs::temp_directory_path()))) {}
+      vault_dir_(fs::unique_path((fs::temp_directory_path())))
+#ifndef MAIDSAFE_WIN32
+      ,
+      kUlimitFileSize([]()->long {               // NOLINT
+        long current_size(ulimit(UL_GETFSIZE));  // NOLINT
+        if (current_size < kLimitsFiles)
+          ulimit(UL_SETFSIZE, kLimitsFiles);
+        return current_size;
+      }())
+#endif
+  {}
 
 void VaultNetwork::SetUp() {
   for (int index(0); index < kClientsSize; ++index)
@@ -67,6 +81,10 @@ void VaultNetwork::TearDown() {
   for (auto& vault : vaults_)
     vault.reset();
   vaults_.clear();
+
+#ifndef MAIDSAFE_WIN32
+  ulimit(UL_SETFSIZE, kUlimitFileSize);
+#endif
 }
 
 bool VaultNetwork::Create(const passport::detail::Fob<passport::detail::PmidTag>& pmid) {

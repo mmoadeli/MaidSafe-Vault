@@ -316,7 +316,7 @@ void ApplySyncToPersona(Persona& persona_node, std::vector<KeyType> keys) {
   }
 }
 
-TEST(SyncTest, FUNC_MultipleParallelRandomAction) {
+TEST(SyncTest, BEH_MultipleParallelRandomAction) {
   const int kActionCount(1000);
   auto keys = CreateKeys(kActionCount);
   //  auto itr = std::begin(keys);
