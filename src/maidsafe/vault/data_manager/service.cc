@@ -197,19 +197,13 @@ void DataManagerService::HandleGetResponse(const PmidName& pmid_name, nfs::Messa
   try {
     get_timer_.AddResponse(message_id.data, std::make_pair(pmid_name, contents));
   }
-  catch (const maidsafe_error& error) {
-    // There is scenario that during the procedure of Get, the request side will get timed out
-    // earlier than the response side (when they use same time out parameter).
-    // So the task will be cleaned out before the time-out response from responder
-    // arrived. The policy shall change to keep timer muted instead of throwing.
-    // BEFORE_RELEASE handle
-    if (error.code() == make_error_code(CommonErrors::no_such_element)) {
-      LOG(kInfo) << "DataManagerService::HandleGetResponse task has been removed due to timed out";
-    } else {
-      LOG(kError) << "DataManagerService::HandleGetResponse encountered unknown error : "
-                  << boost::diagnostic_information(error);
-      throw;
+  catch (test_error& error) {
+    if (auto error_code = boost::get_error_info<CommonErrorCode>(error)) {
+      if (*error_code == CommonErrors::no_such_element)
+        return;
     }
+    error.AddInfo("DataManagerService::HandleGetResponse");
+    throw;
   }
 }
 
@@ -239,10 +233,16 @@ void DataManagerService::SendDeleteRequests(const DataManager::Key& key,
       boost::apply_visitor(delete_visitor, data_name);
     }
   }
-  catch (const maidsafe_error& error) {
-    LOG(kWarning) << "caught error " << error.what();
-    if (error.code() != make_error_code(VaultErrors::no_such_account))
+  catch (test_error& error) {
+    if (auto error_code = boost::get_error_info<VaultErrorCode>(error)) {
+      if (*error_code != VaultErrors::no_such_account) {
+        error.AddInfo("DataManagerService::HandlePutResponse1");
+        throw;
+      }
+    } else {
+      error.AddInfo("DataManagerService::HandlePutResponse2");
       throw;
+    }
   }
 }
 
@@ -258,23 +258,28 @@ uint64_t DataManagerService::Replicate(const DataManager::Key& key, nfs::Message
     if (tried_pmid_node != PmidName())
       storing_pmid_nodes.push_back(tried_pmid_node);
   }
-  catch (const maidsafe_error& error) {
-    if (error.code() == make_error_code(CommonErrors::no_such_element)) {
-      LOG(kInfo) << "No value in db so far...";
+  catch (test_error& error) {
+    if (auto error_code = boost::get_error_info<VaultErrorCode>(error)) {
+      if (*error_code == VaultErrors::no_such_account) {
+        LOG(kInfo) << "No value in db so far...";
+        return chunk_size;
+      }
     }
-    return chunk_size;
+    error.AddInfo("DataManagerService::Replicate");
+    throw;
   }
   if (storing_pmid_nodes.size() >= detail::Parameters::min_replication_factor) {
     try {
       temp_store_.Delete(data_name);
     }
-    catch (const maidsafe_error& error) {
-      if (error.code() == make_error_code(CommonErrors::no_such_element)) {
-        LOG(kVerbose) << "chunk not available";
+    catch (test_error& error) {
+      if (auto error_code = boost::get_error_info<CommonErrorCode>(error)) {
+        if (*error_code == CommonErrors::no_such_element)
+          return chunk_size;
       }
+      error.AddInfo("DataManagerService::Replicate");
       throw;
     }
-    return chunk_size;
   }
 
   auto pmid_name(detail::GetRandomCloseNode(routing_, storing_pmid_nodes));
@@ -311,7 +316,7 @@ void DataManagerService::HandleMessage(
     LOG(kError) << "SynchroniseFromDataManagerToDataManager can't parse content";
     BOOST_THROW_EXCEPTION(MakeError(CommonErrors::parsing_error));
   }
-
+  try {
   switch (static_cast<nfs::MessageAction>(proto_sync.action_type())) {
     case ActionDataManagerPut::kActionId: {
       LOG(kVerbose) << "SynchroniseFromDataManagerToDataManager ActionDataManagerPut";
@@ -321,8 +326,14 @@ void DataManagerService::HandleMessage(
       if (resolved_action) {
         LOG(kInfo) << "SynchroniseFromDataManagerToDataManager ActionDataManagerPut "
                    << "resolved for chunk " << HexSubstr(resolved_action->key.name.string());
-        db_.Commit(resolved_action->key, resolved_action->action);
-        Replicate(resolved_action->key, resolved_action->action.kMessageId);
+        try {
+          db_.Commit(resolved_action->key, resolved_action->action);
+          Replicate(resolved_action->key, resolved_action->action.kMessageId);
+        }
+        catch (const maidsafe_error& /*error*/) {
+          assert(false && "should not have come here");
+        }
+
       }
       break;
     }
@@ -365,7 +376,12 @@ void DataManagerService::HandleMessage(
         try {
           db_.Commit(resolved_action->key, resolved_action->action);
         }
-        catch (const maidsafe_error& /*error*/) {
+        catch (test_error& error) {
+          if (auto error_code = boost::get_error_info<VaultErrorCode>(error)) {
+            if (*error_code == VaultErrors::no_such_account)
+              return;
+          }
+          error.AddInfo("ActionDataManagerAddPmid::kActionId");
           throw;
         }
       }
@@ -396,6 +412,11 @@ void DataManagerService::HandleMessage(
       LOG(kError) << "SynchroniseFromDataManagerToDataManager Unhandled action type";
       assert(false && "Unhandled action type");
     }
+  }
+  }
+  catch (test_error& error) {
+   error.AddInfo("xManager");
+   throw;
   }
 }
 
@@ -451,8 +472,9 @@ void DataManagerService::HandleAccountTransfer(const AccountType& account) {
   try {
     db_.HandleTransfer(std::vector<AccountType> {account});
   }
-  catch (const std::exception& error) {
+  catch (test_error& error) {
     LOG(kError) << "DataManager AcoccountTransfer Failed to store account " << error.what();
+    error.AddInfo("DataManagerService::HandleAccountTransfer");
     throw;  // MAID-357
   }
 }

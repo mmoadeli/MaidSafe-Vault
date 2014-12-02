@@ -417,10 +417,9 @@ template <typename Data>
 bool DataManagerService::EntryExist(const typename Data::Name& name) {
   try {
     db_.Get(DataManager::Key(name.value, Data::Tag::kValue));
-    LOG(kInfo) << "Entry does not exist";
     return true;
   }
-  catch (const maidsafe_error& /*error*/) {
+  catch (test_error& /*error*/) {
     LOG(kInfo) << "Entry does not exist";
     return false;
   }
@@ -467,13 +466,13 @@ void DataManagerService::HandlePutResponse(const typename Data::Name& data_name,
   try {
     value = db_.Get(key);
   }
-  catch (const maidsafe_error& error) {
-    if (error.code() == make_error_code(VaultErrors::no_such_account)) {
-      LOG(kError) << "DataManagerService::HandlePutResponse value does not exist..."
-                  << boost::diagnostic_information(error);
-      // return; BEFORE_RELEASE this line should be uncommented
+  catch (test_error& error) {
+    if (auto error_code = boost::get_error_info<VaultErrorCode>(error)) {
+      if (*error_code == VaultErrors::no_such_account)
+        return;
     }
-    throw error;  // For db errors
+    error.AddInfo("DataManagerService::HandlePutResponse");
+    throw;
   }
   PmidName pmid_node_to_remove;
   auto need_to_prune(false);
@@ -516,7 +515,7 @@ bool DataManagerService::SendPutRetryRequired(const DataName& data_name) {
     auto value(db_.Get(DataManager::Key(data_name.value, DataName::data_type::Tag::kValue)));
     return value.AllPmids().size() < routing::Parameters::group_size;
   }
-  catch (const maidsafe_error& /*error*/) {}
+  catch (test_error& /*error*/) {}
   return false;
 }
 
@@ -656,15 +655,18 @@ std::set<PmidName> DataManagerService::GetOnlinePmids(const typename Data::Name&
     auto online_pmids(value.online_pmids(close_nodes_change_.new_close_nodes()));
     for (auto online_pmid : online_pmids)
       online_pmids_set.insert(online_pmid);
-  } catch (const maidsafe_error& error) {
-    if (error.code() != make_error_code(VaultErrors::no_such_account)) {
-      LOG(kError) << "DataManagerService::GetOnlinePmids encountered unknown error "
-                  << boost::diagnostic_information(error);
-      throw error;  // For db errors
+  } catch (test_error& error) {
+    if (auto error_code = boost::get_error_info<VaultErrorCode>(error)) {
+      if (*error_code != VaultErrors::no_such_account) {
+        error.AddInfo("GetOnlinePmids1");
+        throw;
+      }
+    } else {
+      error.AddInfo("GetOnlinePmids1");
+      throw;
     }
     // TODO(Fraser#5#): 2013-10-03 - Request for non-existent data should possibly generate an alert
     LOG(kWarning) << "Entry for " << HexSubstr(data_name.value) << " doesn't exist.";
-//     throw VaultErrors::no_such_account;
   }
   return online_pmids_set;
 }

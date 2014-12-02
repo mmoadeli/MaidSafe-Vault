@@ -65,11 +65,15 @@ std::unique_ptr<DataManager::Value> DataManagerDataBase::Commit(const DataManage
   try {
     value.reset(new DataManager::Value(Get(key)));
   }
-  catch (const maidsafe_error& error) {
-    if (error.code() != make_error_code(VaultErrors::no_such_account)) {
-      LOG(kError) << "DataManagerDataBase::Commit unknown db error "
-                  << boost::diagnostic_information(error);
-      throw error;  // For db errors
+  catch (test_error& error) {
+    if (auto error_code = boost::get_error_info<VaultErrorCode>(error)) {
+      if (*error_code != VaultErrors::no_such_account) {
+        error.AddInfo("DataManagerDataBase::Commit1");
+        throw;  // For db errors
+      }
+    } else {
+      error.AddInfo("DataManagerDataBase::Commit2");
+      throw;  // For db errors
     }
   }
   if (detail::DbAction::kPut == functor(value)) {
@@ -128,7 +132,7 @@ DataManager::Value DataManagerDataBase::Get(const DataManager::Key& key) {
     value = ComposeValue(statement.ColumnText(0), statement.ColumnText(1));
   } else {
     LOG(kWarning) << "dones't got account for chunk " << EncodeKey(key);
-    BOOST_THROW_EXCEPTION(MakeError(VaultErrors::no_such_account));
+    MAIDSAFE_THROW_EXCEPTION(VaultErrorCode(VaultErrors::no_such_account));
   }
   return value;
 }
