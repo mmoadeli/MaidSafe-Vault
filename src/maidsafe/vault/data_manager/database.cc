@@ -219,17 +219,21 @@ void DataManagerDataBase::HandleTransfer(const std::vector<DataManager::KvPair>&
     try {
       Get(kv_pair.first);
     }
-    catch (const maidsafe_error& error) {
-      LOG(kInfo) << "DataManager AcoccountTransfer DataManagerDataBase::HandleTransfer "
-                 << error.what();
-      if ((error.code() != make_error_code(CommonErrors::no_such_element)) &&
-          (error.code() != make_error_code(VaultErrors::no_such_account))) {
-        throw;  // For db errors
-      } else {
-        LOG(kInfo) << "DataManager AcoccountTransfer DataManagerDataBase::HandleTransfer "
-                   << "inserting account " << HexSubstr(kv_pair.first.name.string());
-        Put(kv_pair.first, kv_pair.second);
+    catch (test_error& error) {
+      if (auto error_code = boost::get_error_info<VaultErrorCode>(error)) {
+        if (*error_code == VaultErrors::no_such_account) {
+          Put(kv_pair.first, kv_pair.second);
+          return;
+        }
       }
+      if (auto error_code = boost::get_error_info<CommonErrorCode>(error)) {
+        if (*error_code == CommonErrors::no_such_element) {
+          Put(kv_pair.first, kv_pair.second);
+          return;
+        }
+      }
+      error.AddInfo("DataManagerDataBase::HandleTransfer");
+      throw;
     }
   }
 }
