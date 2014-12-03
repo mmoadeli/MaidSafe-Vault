@@ -533,7 +533,7 @@ void DataManagerService::HandleGet(const typename Data::Name& data_name,
         message_id);
     return;
   }
-  catch (const maidsafe_error& /*error*/) {
+  catch (const test_error& /*error*/) {
     LOG(kVerbose) << "data not available in temporary store";
   }
 

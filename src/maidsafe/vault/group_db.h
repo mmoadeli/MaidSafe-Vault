@@ -444,7 +444,7 @@ typename GroupDb<Persona>::Value GroupDb<Persona>::Get(const Key& key, const Gro
     LOG(kError) << "cann't find such element for get, group_id : " << group_id
                 << " group_name : " << HexSubstr(key.group_name()->string())
                 << " name : " << DebugId(key.name);
-    BOOST_THROW_EXCEPTION(MakeError(CommonErrors::no_such_element));
+    MAIDSAFE_THROW_EXCEPTION(CommonErrorCode(CommonErrors::no_such_element));
   }
   return Value(value_string);
 }

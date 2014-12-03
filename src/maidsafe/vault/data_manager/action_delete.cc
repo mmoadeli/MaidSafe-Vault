@@ -46,7 +46,7 @@ detail::DbAction ActionDataManagerDelete::operator()(std::unique_ptr<DataManager
     return detail::DbAction::kDelete;
   } else {
     LOG(kWarning) << "ActionDataManagerDelete::operator() no_such_element";
-    BOOST_THROW_EXCEPTION(MakeError(CommonErrors::no_such_element));
+    MAIDSAFE_THROW_EXCEPTION(CommonErrorCode(CommonErrors::no_such_element));
   }
 }
 

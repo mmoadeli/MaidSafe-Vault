@@ -37,7 +37,7 @@ NonEmptyString MemoryFIFO::Get(const KeyType& key) {
   std::lock_guard<std::mutex> lock(mutex_);
   auto itr(Find(key));
   if (itr == std::end(memory_fifo_))
-    BOOST_THROW_EXCEPTION(MakeError(CommonErrors::no_such_element));
+    MAIDSAFE_THROW_EXCEPTION(CommonErrorCode(CommonErrors::no_such_element));
   auto result = *itr;
   memory_fifo_.erase(itr);
   memory_fifo_.push_back(result);  // last out
@@ -48,7 +48,7 @@ void MemoryFIFO::Delete(const KeyType& key) {
   std::lock_guard<std::mutex> lock(mutex_);
   auto itr(Find(key));
   if (itr == std::end(memory_fifo_))
-    BOOST_THROW_EXCEPTION(MakeError(CommonErrors::no_such_element));
+    MAIDSAFE_THROW_EXCEPTION(CommonErrorCode(CommonErrors::no_such_element));
   memory_fifo_.erase(itr);
 }
 

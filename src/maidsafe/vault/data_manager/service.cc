@@ -293,13 +293,18 @@ uint64_t DataManagerService::Replicate(const DataManager::Key& key, nfs::Message
        this, *pmid_name, serialises_value, message_id);
     boost::apply_visitor(send_put_request_visitor, data_name);
   }
-  catch (const maidsafe_error& error) {
-    if (error.code() == make_error_code(CommonErrors::no_such_element)) {
-      LOG(kError) << HexSubstr(key.name.string()) << " not in temp storage ";
-      detail::DataManagerGetForReplicationVisitor<DataManagerService>
-          get_for_replication(this, storing_pmid_nodes);
-      boost::apply_visitor(get_for_replication, data_name);
+  catch (test_error& error) {
+    if (auto error_code = boost::get_error_info<CommonErrorCode>(error)) {
+      if (*error_code == CommonErrors::no_such_element) {
+        LOG(kError) << HexSubstr(key.name.string()) << " not in temp storage ";
+        detail::DataManagerGetForReplicationVisitor<DataManagerService>
+            get_for_replication(this, storing_pmid_nodes);
+        boost::apply_visitor(get_for_replication, data_name);
+        return chunk_size;
+      }
     }
+    error.AddInfo("DataManagerService::Replicate");
+    throw;
   }
   return chunk_size;
 }
@@ -345,19 +350,28 @@ void DataManagerService::HandleMessage(
       if (resolved_action) {
         LOG(kInfo) << "SynchroniseFromDataManagerToDataManager ActionDataManagerDelete "
                    << "resolved for chunk " << HexSubstr(resolved_action->key.name.string());
-        auto value(db_.Commit(resolved_action->key, resolved_action->action));
-        LOG(kInfo) << "SynchroniseFromDataManagerToDataManager ActionDataManagerDelete "
-                   << "the chunk " << HexSubstr(resolved_action->key.name.string());
-        if (value) {
-          // The delete operation will not depend on subscribers anymore.
-          // Owners' signatures may stored in DM later on to support deletes.
-          LOG(kInfo) << "SynchroniseFromDataManagerToDataManager send delete request";
-          std::set<PmidName> all_pmids_set;
-          auto all_pmids(value->AllPmids());
-          for (auto pmid : all_pmids)
-            all_pmids_set.insert(pmid);
-          SendDeleteRequests(resolved_action->key, all_pmids_set,
-                             resolved_action->action.MessageId());
+        try {
+          auto value(db_.Commit(resolved_action->key, resolved_action->action));
+          LOG(kInfo) << "SynchroniseFromDataManagerToDataManager ActionDataManagerDelete "
+                     << "the chunk " << HexSubstr(resolved_action->key.name.string());
+          if (value) {
+            // The delete operation will not depend on subscribers anymore.
+            // Owners' signatures may stored in DM later on to support deletes.
+            LOG(kInfo) << "SynchroniseFromDataManagerToDataManager send delete request";
+            std::set<PmidName> all_pmids_set;
+            auto all_pmids(value->AllPmids());
+            for (auto pmid : all_pmids)
+              all_pmids_set.insert(pmid);
+            SendDeleteRequests(resolved_action->key, all_pmids_set,
+                               resolved_action->action.MessageId());
+          }
+        }
+        catch (test_error& error) {
+          if (auto error_code = boost::get_error_info<CommonErrorCode>(error))
+            if (*error_code == CommonErrors::no_such_element)
+              return;
+          error.AddInfo("ActionDataManagerDelete::kActionId");
+          throw;
         }
       }
       break;
@@ -401,7 +415,7 @@ void DataManagerService::HandleMessage(
         //                as the pmid_node will get added eventually and may cause problem for get
         try {
           db_.Commit(resolved_action->key, resolved_action->action);
-        } catch(maidsafe_error& error) {
+        } catch(test_error& error) {
           LOG(kWarning) << "having error when trying to commit remove pmid to db : "
                         << boost::diagnostic_information(error);
         }

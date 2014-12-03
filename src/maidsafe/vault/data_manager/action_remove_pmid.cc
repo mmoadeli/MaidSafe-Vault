@@ -55,7 +55,7 @@ detail::DbAction ActionDataManagerRemovePmid::operator()(std::unique_ptr<DataMan
     value->RemovePmid(kPmidName);
     return detail::DbAction::kPut;
   }
-  BOOST_THROW_EXCEPTION(MakeError(CommonErrors::no_such_element));
+  MAIDSAFE_THROW_EXCEPTION(CommonErrorCode(CommonErrors::no_such_element));
 }
 
 bool operator==(const ActionDataManagerRemovePmid& lhs, const ActionDataManagerRemovePmid& rhs) {

@@ -230,7 +230,7 @@ void MaidManagerService::HandleSyncedDelete(
   // } catch (const maidsafe_error& error) {
   //  LOG(kError) << "MaidManagerService::HandleSyncedDelete commiting error: "
   //              << boost::diagnostic_information(error);
-  //  if (error.code() != make_error_code(CommonErrors::no_such_element) &&
+  //  if (error.code() != make_error_code(CommonErrors::no_such_element_mm) &&
   //      error.code() != make_error_code(VaultErrors::no_such_account)) {
   //    throw;
   //  } else {

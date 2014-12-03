@@ -52,7 +52,7 @@ std::string ActionMaidManagerDelete::Serialise() const {
 
 void ActionMaidManagerDelete::operator()(MaidManagerValue& /*value*/) const {
   /*if (!value)
-    BOOST_THROW_EXCEPTION(MakeError(CommonErrors::no_such_element));
+    BOOST_THROW_EXCEPTION(MakeError(CommonErrors::no_such_element_mm));
 
   value.DeleteData(value->Delete());
   VLOG(nfs::Persona::kMaidManager, VisualiserAction::kDecreaseCount, value->count());
