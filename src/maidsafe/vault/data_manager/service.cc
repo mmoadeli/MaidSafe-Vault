@@ -246,21 +246,24 @@ void DataManagerService::SendDeleteRequests(const DataManager::Key& key,
   }
 }
 
-uint64_t DataManagerService::SendPutRequest(const DataManager::Key& key, nfs::MessageId message_id,
-                                            const PmidName& tried_pmid_node) {
+uint64_t DataManagerService::Replicate(const DataManager::Key& key, nfs::MessageId message_id,
+                                       const PmidName& tried_pmid_node) {
   std::vector<PmidName> storing_pmid_nodes;
   uint64_t chunk_size(0);
   auto data_name(GetDataNameVariant(key.type, key.name));
   try {
     auto value(db_.Get(key));
     storing_pmid_nodes = value.online_pmids(close_nodes_change_.new_close_nodes());
+    chunk_size = value.chunk_size();
     if (tried_pmid_node != PmidName())
       storing_pmid_nodes.push_back(tried_pmid_node);
   }
   catch (const maidsafe_error& error) {
     if (error.code() == make_error_code(CommonErrors::no_such_element)) {
-      LOG(kInfo) << "No storing pmid so far...";
+      LOG(kInfo) << "No value in db so far...";
+      return chunk_size;
     }
+    throw;
   }
   if (storing_pmid_nodes.size() >= detail::Parameters::min_replication_factor) {
     try {
@@ -289,9 +292,9 @@ uint64_t DataManagerService::SendPutRequest(const DataManager::Key& key, nfs::Me
   catch (const maidsafe_error& error) {
     if (error.code() == make_error_code(CommonErrors::no_such_element)) {
       LOG(kError) << HexSubstr(key.name.string()) << " not in temp storage ";
-      detail::DataManagerGetForNodeDownVisitor<DataManagerService>
-          get_for_node_down(this, storing_pmid_nodes);
-      boost::apply_visitor(get_for_node_down, data_name);
+      detail::DataManagerGetForReplicationVisitor<DataManagerService>
+          get_for_replication(this, storing_pmid_nodes);
+      boost::apply_visitor(get_for_replication, data_name);
     }
   }
   return chunk_size;
@@ -320,7 +323,7 @@ void DataManagerService::HandleMessage(
         LOG(kInfo) << "SynchroniseFromDataManagerToDataManager ActionDataManagerPut "
                    << "resolved for chunk " << HexSubstr(resolved_action->key.name.string());
         db_.Commit(resolved_action->key, resolved_action->action);
-        SendPutRequest(resolved_action->key, resolved_action->action.kMessageId);
+        Replicate(resolved_action->key, resolved_action->action.kMessageId);
       }
       break;
     }
@@ -363,8 +366,9 @@ void DataManagerService::HandleMessage(
         try {
           db_.Commit(resolved_action->key, resolved_action->action);
         }
-        catch (const maidsafe_error& /*error*/) {
-          throw;
+        catch (const maidsafe_error& error) {
+          if (error.code() != make_error_code(CommonErrors::no_such_element))
+            throw;
         }
       }
       break;
@@ -437,8 +441,10 @@ void DataManagerService::HandleAccountTransferEntry(
   auto result(account_transfer_.Add(Key(kv_msg.key()), DataManagerValue(kv_msg.value()),
                                     sender.data));
   if (result.result ==  Handler::AddResult::kSuccess) {
+    LOG(kVerbose) << "DataManager AcoccountTransfer HandleAccountTransfer";
     HandleAccountTransfer(std::make_pair(result.key, *result.value));
   } else  if (result.result ==  Handler::AddResult::kFailure) {
+    LOG(kVerbose) << "DataManager AcoccountTransfer SendAccountRequest";
     dispatcher_.SendAccountRequest(result.key);
   }
 }
@@ -448,7 +454,7 @@ void DataManagerService::HandleAccountTransfer(const AccountType& account) {
     db_.HandleTransfer(std::vector<AccountType> {account});
   }
   catch (const std::exception& error) {
-    LOG(kError) << "Failed to store account " << error.what();
+    LOG(kError) << "DataManager AcoccountTransfer Failed to store account " << error.what();
     throw;  // MAID-357
   }
 }
@@ -473,7 +479,7 @@ void DataManagerService::HandleChurnEvent(
   PmidName pmid_name(Identity(close_nodes_change->lost_node().string()));
   std::map<DataManager::Key, DataManager::Value> accounts(db_.GetRelatedAccounts(pmid_name));
   for (auto& account : accounts)
-    SendPutRequest(account.first, nfs::MessageId(RandomInt32()));
+    Replicate(account.first, nfs::MessageId(RandomInt32()));
 }
 
 void DataManagerService::TransferAccount(const NodeId& dest,
