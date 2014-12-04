@@ -488,7 +488,7 @@ typename GroupDb<Persona>::GroupMap::iterator GroupDb<Persona>::FindGroup(
   if (it == group_map_.end()) {
     LOG(kWarning) << "GroupDb<Persona>::FindGroup can't find account "
                   << HexSubstr(group_name->string());
-    BOOST_THROW_EXCEPTION(MakeError(VaultErrors::no_such_account));
+    MAIDSAFE_THROW_EXCEPTION(VaultErrorCode(VaultErrors::no_such_account));
   }
   return it;
 }

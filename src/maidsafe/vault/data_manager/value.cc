@@ -41,7 +41,13 @@ DataManagerValue::DataManagerValue(const std::string& serialised_value)
   } else {
     if (value_proto.size() <= 0) {
       LOG(kError) << "Invalid parameters";
-      BOOST_THROW_EXCEPTION(MakeError(CommonErrors::invalid_parameter));
+      try {
+        MAIDSAFE_THROW_EXCEPTION(CommonErrorCode(CommonErrors::invalid_parameter));
+      }
+      catch (test_error& error) {
+      error.AddInfo("DataManagerValue");
+      throw;
+      }
     }
     size_ = value_proto.size();
     for (auto& i : value_proto.pmid_names())

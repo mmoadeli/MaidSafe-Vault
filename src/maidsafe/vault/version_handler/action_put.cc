@@ -71,7 +71,7 @@ std::string ActionVersionHandlerPut::Serialise() const {
 
 detail::DbAction ActionVersionHandlerPut::operator()(std::unique_ptr<VersionHandlerValue>& value) {
   if (!value)
-    BOOST_THROW_EXCEPTION(MakeError(VaultErrors::no_such_account));
+    MAIDSAFE_THROW_EXCEPTION(VaultErrorCode(VaultErrors::no_such_account));
   VLOG(nfs::Persona::kVersionHandler, VisualiserAction::kChangeVersion, old_version.id.value,
        new_version.id.value);
   tip_of_tree = value->Put(old_version, new_version);

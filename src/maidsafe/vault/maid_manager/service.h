@@ -383,7 +383,7 @@ void MaidManagerService::HandlePut(const MaidName& account_name, const Data& dat
     std::lock_guard<std::mutex> lock(mutex_);
     auto it(accounts_.find(account_name));
     if (it == std::end(accounts_))
-      BOOST_THROW_EXCEPTION(MakeError(VaultErrors::no_such_account));
+      MAIDSAFE_THROW_EXCEPTION(VaultErrorCode(VaultErrors::no_such_account));
     value = it->second;
   }
   if (value.AllowPut(data) == MaidManagerValue::Status::kNoSpace) {
@@ -426,7 +426,7 @@ void MaidManagerService::HandleCreateVersionTreeRequest(
     std::lock_guard<std::mutex> lock(mutex_);
     auto it(accounts_.find(maid_name));
     if (it == std::end(accounts_))
-      BOOST_THROW_EXCEPTION(MakeError(VaultErrors::no_such_account));
+      MAIDSAFE_THROW_EXCEPTION(VaultErrorCode(VaultErrors::no_such_account));
   }
   dispatcher_.SendCreateVersionTreeRequest(maid_name, data_name, version, max_versions,
                                            max_branches, message_id);
@@ -441,7 +441,7 @@ void MaidManagerService::HandlePutVersionRequest(
     std::lock_guard<std::mutex> lock(mutex_);
     auto it(accounts_.find(maid_name));
     if (it == std::end(accounts_))
-      BOOST_THROW_EXCEPTION(MakeError(VaultErrors::no_such_account));
+      MAIDSAFE_THROW_EXCEPTION(VaultErrorCode(VaultErrors::no_such_account));
   }
   LOG(kVerbose) << "MaidManagerService::HandlePutVersionRequest put new version "
                 << DebugId(new_version.id) << " after old version "
@@ -491,7 +491,7 @@ void MaidManagerService::HandleAccountRequest(const DataName& name, const NodeId
     std::lock_guard<std::mutex> lock(mutex_);
     auto it(accounts_.find(Key(name.value)));
     if (it == std::end(accounts_))
-      BOOST_THROW_EXCEPTION(MakeError(VaultErrors::no_such_account));
+      MAIDSAFE_THROW_EXCEPTION(VaultErrorCode(VaultErrors::no_such_account));
 
     protobuf::MaidManagerKeyValuePair kv_pair;
     vault::Key key(it->first.value, MaidManager::Key::data_type::Tag::kValue);

@@ -48,7 +48,13 @@ PmidManagerValue::PmidManagerValue(const std::string &serialised_value)
   }
   if (!proto_value.IsInitialized()) {
     LOG(kError) << "Failed to construct pmid value.";
-    BOOST_THROW_EXCEPTION(MakeError(CommonErrors::invalid_parameter));
+      try {
+        MAIDSAFE_THROW_EXCEPTION(CommonErrorCode(CommonErrors::invalid_parameter));
+      }
+      catch (test_error& error) {
+      error.AddInfo("DataManagerValue");
+      throw;
+      }
   }
   stored_total_size = proto_value.stored_total_size();
   lost_total_size = proto_value.lost_total_size();
@@ -80,7 +86,13 @@ void PmidManagerValue::PutData(uint64_t size) {
 void PmidManagerValue::DeleteData(uint64_t size) {
   if (stored_total_size < size) {
     LOG(kError) << "invalid stored_total_size " << stored_total_size;
-    BOOST_THROW_EXCEPTION(MakeError(CommonErrors::invalid_parameter));
+      try {
+        MAIDSAFE_THROW_EXCEPTION(CommonErrorCode(CommonErrors::invalid_parameter));
+      }
+      catch (test_error& error) {
+      error.AddInfo("DataManagerValue");
+      throw;
+      }
   }
   stored_total_size -= size;
 }

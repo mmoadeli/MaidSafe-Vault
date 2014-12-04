@@ -308,9 +308,11 @@ void VersionHandlerService::HandleCreateVersionTree(const VersionHandler::Key& k
     db_.Get(key);
   }
   catch (const maidsafe_error& error) {
-    if (error.code() != make_error_code(VaultErrors::no_such_account)) {
-      dispatcher_.SendCreateVersionTreeResponse(originator, key, error, message_id);
-      return;
+    if (auto error_code = boost::get_error_info<VaultErrorCode>(error)) {
+      if (*error_code != VaultErrors::no_such_account) {
+        dispatcher_.SendCreateVersionTreeResponse(originator, key, error, message_id);
+        return;
+      }
     }
   }
   DoSync(VersionHandler::UnresolvedCreateVersionTree(
