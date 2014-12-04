@@ -59,13 +59,17 @@ int main(int argc, char* argv[]) {
   try {
     VLOG(maidsafe::vault::VisualiserAction::kVaultStopped, exit_code);
   }
-  catch (const maidsafe::maidsafe_error& err) {
-    if (err.code() == maidsafe::make_error_code(maidsafe::CommonErrors::unable_to_handle_request)) {
-      LOG(kWarning) << "Visualiser logging has not been initialised.";
-    } else {
-      LOG(kError) << boost::diagnostic_information(err);
-      throw;
+  catch (maidsafe::test_error& error) {
+    if (auto error_code = boost::get_error_info<maidsafe::CommonErrorCode>(error)) {
+      if (*error_code == maidsafe::CommonErrors::unable_to_handle_request) {
+        LOG(kWarning) << "Visualiser logging has not been initialised.";
+        return exit_code;
+      }
     }
+    std::cout << "Vault main\n\n";
+    std::system_error system_error(maidsafe::CommonErrors::success,
+                                   boost::diagnostic_information(error));
+    throw system_error;
   }
   return exit_code;
 }
