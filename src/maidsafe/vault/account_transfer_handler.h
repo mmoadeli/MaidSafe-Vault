@@ -146,7 +146,7 @@ AccountTransferHandler<Persona>::Add(const typename Persona::Key& key,
     boost::optional<Value> resolved_value(Value::Resolve(values));
     container_.erase(key);
     return Result(key, resolved_value, AddResult::kSuccess);
-  } catch (const maidsafe::maidsafe_error& error) {
+  } catch (maidsafe::maidsafe_error& error) {
     if (error.code() == make_error_code(VaultErrors::failed_to_handle_request)) {
       // Unsuccessfull resolution
       container_.erase(key);
@@ -155,6 +155,7 @@ AccountTransferHandler<Persona>::Add(const typename Persona::Key& key,
       // resolution requires more entries
       return Result(key, boost::optional<Value>(), AddResult::kWaiting);
     } else {
+      error.AddInfo("AccountTransferHandler<Persona>::Add");
       throw;
     }
   }

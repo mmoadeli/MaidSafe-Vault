@@ -103,11 +103,12 @@ std::unique_ptr<Value> Db<Key, Value>::Commit(
   try {
     value.reset(new Value(Get(key)));
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     if (error.code() != make_error_code(VaultErrors::no_such_account)) {
       LOG(kError) << "Db<Key, Value>::Commit unknown db error "
                   << boost::diagnostic_information(error);
-      throw;  // For db errors
+     error.AddInfo("Db<Key, Value>::Commit");
+     throw;
     }
   }
   if (detail::DbAction::kPut == functor(value)) {
@@ -190,13 +191,15 @@ void Db<Key, Value>::HandleTransfer(const std::vector<std::pair<Key, Value>>& co
     try {
       Get(kv_pair.first);
     }
-    catch (const maidsafe_error& error) {
+    catch (maidsafe_error& error) {
       LOG(kInfo) << error.what();
       if ((error.code() != make_error_code(CommonErrors::no_such_element)) &&
-          (error.code() != make_error_code(VaultErrors::no_such_account)))
-        throw;  // For db errors
-      else
+          (error.code() != make_error_code(VaultErrors::no_such_account))) {
+        error.AddInfo("Db<Key, Value>::HandleTransfer");
+        throw;
+      } else {
         Put(kv_pair);
+      }
     }
   }
 }

@@ -205,7 +205,7 @@ void VersionHandlerService::HandleMessage(
               resolved_action->action.originator, resolved_action->key,
               maidsafe_error(CommonErrors::success), resolved_action->action.message_id);
         }
-        catch (const maidsafe_error& error) {
+        catch (maidsafe_error& error) {
           LOG(kError) << message.id << " Failed to create version: "
                       << boost::diagnostic_information(error);
           dispatcher_.SendCreateVersionTreeResponse(
@@ -233,7 +233,7 @@ void VersionHandlerService::HandleMessage(
               resolved_action->action.originator, resolved_action->key, tip_of_tree,
               maidsafe_error(CommonErrors::success), resolved_action->action.message_id);
         }
-        catch (const maidsafe_error& error) {
+        catch (maidsafe_error& error) {
           LOG(kError) << message.id << " Failed to put version: "
                       << boost::diagnostic_information(error);
           dispatcher_.SendPutVersionResponse(
@@ -277,7 +277,7 @@ void VersionHandlerService::HandlePutVersion(
   try {
     db_.Get(key);
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     LOG(kWarning) << "error handling put version request " << message_id;
     dispatcher_.SendPutVersionResponse(originator, key, VersionHandler::VersionName(), error,
                                        message_id);
@@ -307,7 +307,7 @@ void VersionHandlerService::HandleCreateVersionTree(const VersionHandler::Key& k
   try {
     db_.Get(key);
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     if (error.code() != make_error_code(VaultErrors::no_such_account)) {
       dispatcher_.SendCreateVersionTreeResponse(originator, key, error, message_id);
       return;

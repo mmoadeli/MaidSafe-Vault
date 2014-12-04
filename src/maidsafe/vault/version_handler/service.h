@@ -242,7 +242,7 @@ void VersionHandlerService::HandleGetVersions(const VersionHandler::Key& key,
     dispatcher_.SendGetVersionsResponse(key, value.Get(), requestor_type,
                                         maidsafe_error(CommonErrors::success), message_id);
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     LOG(kError) << "HandleGetVersions  msg id" << message_id
                 << boost::diagnostic_information(error);
     dispatcher_.SendGetVersionsResponse(key, std::vector<StructuredDataVersions::VersionName>(),
@@ -259,7 +259,7 @@ void VersionHandlerService::HandleGetBranch(
     dispatcher_.SendGetBranchResponse(key, value.GetBranch(version_name), requestor_type,
                                       maidsafe_error(CommonErrors::success), message_id);
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     dispatcher_.SendGetBranchResponse(key, std::vector<typename VersionHandler::VersionName>(),
                                       requestor_type, error, message_id);
   }

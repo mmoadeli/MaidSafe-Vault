@@ -65,11 +65,12 @@ std::unique_ptr<DataManager::Value> DataManagerDataBase::Commit(const DataManage
   try {
     value.reset(new DataManager::Value(Get(key)));
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     if (error.code() != make_error_code(VaultErrors::no_such_account)) {
       LOG(kError) << "DataManagerDataBase::Commit unknown db error "
                   << boost::diagnostic_information(error);
-      throw;  // For db errors
+      error.AddInfo("DataManagerDataBase::Commit");
+      throw;
     }
   }
   if (detail::DbAction::kPut == functor(value)) {
@@ -215,12 +216,13 @@ void DataManagerDataBase::HandleTransfer(const std::vector<DataManager::KvPair>&
     try {
       Get(kv_pair.first);
     }
-    catch (const maidsafe_error& error) {
+    catch (maidsafe_error& error) {
       LOG(kInfo) << "DataManager AcoccountTransfer DataManagerDataBase::HandleTransfer "
                  << error.what();
       if ((error.code() != make_error_code(CommonErrors::no_such_element)) &&
           (error.code() != make_error_code(VaultErrors::no_such_account))) {
-        throw;  // For db errors
+        error.AddInfo("DataManagerDataBase::HandleTransfer");
+        throw;
       } else {
         LOG(kInfo) << "DataManager AcoccountTransfer DataManagerDataBase::HandleTransfer "
                    << "inserting account " << HexSubstr(kv_pair.first.name.string());

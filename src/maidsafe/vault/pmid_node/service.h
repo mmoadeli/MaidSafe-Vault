@@ -270,7 +270,7 @@ void PmidNodeService::HandleGet(const typename Data::Name& data_name,
     dispatcher_.SendGetOrIntegrityCheckResponse(data_or_check_result, data_manager_node_id,
                                                 message_id);
 #endif
-  } catch (const maidsafe_error& error) {
+  } catch (maidsafe_error& error) {
     // Not sending error here as timeout will happen anyway at Datamanager.
     // This case should be least frequent.
     LOG(kError) << "Failed to get data : " << DebugId(data_name.value) << " , "
@@ -288,7 +288,7 @@ void PmidNodeService::HandlePut(const Data& data, const uint64_t size, nfs::Mess
     LOG(kVerbose) << "PmidNodeService::HandlePut put " << HexSubstr(data.name().value)
                   << " with message_id " << message_id.data;
     handler_.Put(data);
-  } catch (const maidsafe_error& error) {
+  } catch (maidsafe_error& error) {
     LOG(kWarning) << "PmidNodeService::HandlePut send put failure " << HexSubstr(data.name().value)
                   << " of size " << size
                   << " with AvailableSpace " << handler_.AvailableSpace()
@@ -306,7 +306,7 @@ void PmidNodeService::HandleDelete(const typename Data::Name& data_name) {
   try {
     VLOG(nfs::Persona::kPmidNode, VisualiserAction::kDeleteChunk, data_name.value);
     handler_.Delete(GetDataNameVariant(Data::Tag::kValue, data_name.value));
-  } catch (const maidsafe_error& error) {
+  } catch (maidsafe_error& error) {
     LOG(kError) << "Failed to delete data : " << HexSubstr(data_name.value) << " , "
                 << boost::diagnostic_information(error);
   } catch (const std::exception& e) {
@@ -339,7 +339,7 @@ void PmidNodeService::HandleIntegrityCheck(const typename Data::Name& data_name,
                   << HexSubstr(data.name().value);
     dispatcher_.SendGetOrIntegrityCheckResponse(data_or_check_result, data_manager_node_id,
                                                 message_id);
-  } catch (const maidsafe_error& error) {
+  } catch (maidsafe_error& error) {
     // Not sending error here as timeout will happen anyway at Datamanager.
     // This case should be least frequent.
     LOG(kError) << "Failed to do integrity check for data : " << DebugId(data_name.value) << " , "

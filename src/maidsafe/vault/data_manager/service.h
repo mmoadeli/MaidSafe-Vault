@@ -467,12 +467,13 @@ void DataManagerService::HandlePutResponse(const typename Data::Name& data_name,
   try {
     value = db_.Get(key);
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     if (error.code() == make_error_code(VaultErrors::no_such_account)) {
       LOG(kError) << "DataManagerService::HandlePutResponse value does not exist..."
                   << boost::diagnostic_information(error);
       return;
     }
+    error.AddInfo("HandlePutResponse");
     throw;
   }
   PmidName pmid_node_to_remove;
@@ -656,11 +657,12 @@ std::set<PmidName> DataManagerService::GetOnlinePmids(const typename Data::Name&
     auto online_pmids(value.online_pmids(close_nodes_change_.new_close_nodes()));
     for (auto online_pmid : online_pmids)
       online_pmids_set.insert(online_pmid);
-  } catch (const maidsafe_error& error) {
+  } catch (maidsafe_error& error) {
     if (error.code() != make_error_code(VaultErrors::no_such_account)) {
       LOG(kError) << "DataManagerService::GetOnlinePmids encountered unknown error "
                   << boost::diagnostic_information(error);
-      throw;  // For db errors
+      error.AddInfo("GetOnlinePmids");
+      throw;
     }
     // TODO(Fraser#5#): 2013-10-03 - Request for non-existent data should possibly generate an alert
     LOG(kWarning) << "Entry for " << HexSubstr(data_name.value) << " doesn't exist.";

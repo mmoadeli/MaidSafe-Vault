@@ -252,11 +252,12 @@ std::unique_ptr<typename Persona::Value> GroupDb<Persona>::Commit(
   try {
     value.reset(new Value(Get(key, it->second.first)));
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     if (error.code() != make_error_code(CommonErrors::no_such_element)) {
       LOG(kInfo) << "GroupDb<Persona>::Commit encountered unknown error : "
                  << boost::diagnostic_information(error);
-      throw;  // throw only for db errors
+      error.AddInfo("GroupDb<Persona>::Commit");
+      throw;
     }
   }
 
@@ -277,13 +278,15 @@ std::unique_ptr<typename Persona::Value> GroupDb<Persona>::Commit(
       }
     }
   }
-  catch (const maidsafe_error& error) {
-    if (error.code() == make_error_code(VaultErrors::data_already_exists))
+  catch (maidsafe_error& error) {
+    if (error.code() == make_error_code(VaultErrors::data_already_exists)) {
       LOG(kWarning) << "GroupDb<Persona>::Commit data already exists";
-    else
+    } else {
       LOG(kError) << "GroupDb<Persona>::Commit encountered unknown error "
                   << boost::diagnostic_information(error);
-    throw;
+      error.AddInfo("GroupDb<Persona>::Commit");
+      throw;
+    }
   }
   return nullptr;
 }
@@ -409,7 +412,7 @@ void GroupDb<Persona>::DeleteGroupEntries(const GroupName& group_name) {
   try {
     DeleteGroupEntries(FindGroup(group_name));
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     LOG(kInfo) << "account doesn't exist for group " << HexSubstr(group_name->string())
                << ", error : " << boost::diagnostic_information(error);
   }

@@ -78,8 +78,9 @@ void PmidManagerService::HandleSyncedPut(
       synced_action->action(itr->second);
     }
     synced_action->action(itr->second);
-  } catch (const maidsafe_error& error) {
+  } catch (maidsafe_error& error) {
     LOG(kWarning) << "HandleSyncedPut caught an error during account commit " << error.what();
+    error.AddInfo("HandleSyncedPut");
     throw;
   }
   auto data_name(GetDataNameVariant(synced_action->key.type, synced_action->key.name));
@@ -122,8 +123,9 @@ void PmidManagerService::HandleSyncedUpdateAccount(
     if (itr == std::end(accounts_))
       LOG(kWarning) << "accound does not exist";
     synced_action->action(itr->second);
-  } catch (const maidsafe_error& error) {
+  } catch (maidsafe_error& error) {
     LOG(kWarning) << "HandleSyncedUpdateAccount error " << error.what();
+    error.AddInfo("HandleSyncedCreatePmidAccount");
     throw;
   }
 }

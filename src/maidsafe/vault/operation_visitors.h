@@ -775,7 +775,7 @@ class CheckDataNameVisitor : public boost::static_visitor<bool> {
                   data_name, typename DataNameType::data_type::serialised_type(kContent_)).name() ==
               data_name);
     }
-    catch (const maidsafe_error& error) {
+    catch (maidsafe_error& error) {
       LOG(kWarning) << "Failed to deserialise data" << error.code();
       return false;
     }

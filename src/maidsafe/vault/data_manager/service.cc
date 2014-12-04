@@ -197,7 +197,7 @@ void DataManagerService::HandleGetResponse(const PmidName& pmid_name, nfs::Messa
   try {
     get_timer_.AddResponse(message_id.data, std::make_pair(pmid_name, contents));
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     // There is scenario that during the procedure of Get, the request side will get timed out
     // earlier than the response side (when they use same time out parameter).
     // So the task will be cleaned out before the time-out response from responder
@@ -208,6 +208,7 @@ void DataManagerService::HandleGetResponse(const PmidName& pmid_name, nfs::Messa
     } else {
       LOG(kError) << "DataManagerService::HandleGetResponse encountered unknown error : "
                   << boost::diagnostic_information(error);
+      error.AddInfo("HandleGetResponse");
       throw;
     }
   }
@@ -239,10 +240,12 @@ void DataManagerService::SendDeleteRequests(const DataManager::Key& key,
       boost::apply_visitor(delete_visitor, data_name);
     }
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     LOG(kWarning) << "caught error " << error.what();
-    if (error.code() != make_error_code(VaultErrors::no_such_account))
+    if (error.code() != make_error_code(VaultErrors::no_such_account)) {
+      error.AddInfo("SendDeleteRequests");
       throw;
+    }
   }
 }
 
@@ -258,21 +261,23 @@ uint64_t DataManagerService::Replicate(const DataManager::Key& key, nfs::Message
     if (tried_pmid_node != PmidName())
       storing_pmid_nodes.push_back(tried_pmid_node);
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     if (error.code() == make_error_code(CommonErrors::no_such_element)) {
       LOG(kInfo) << "No value in db so far...";
       return chunk_size;
     }
+    error.AddInfo("Replicate1");
     throw;
   }
   if (storing_pmid_nodes.size() >= detail::Parameters::min_replication_factor) {
     try {
       temp_store_.Delete(data_name);
     }
-    catch (const maidsafe_error& error) {
+    catch (maidsafe_error& error) {
       if (error.code() == make_error_code(CommonErrors::no_such_element)) {
         LOG(kVerbose) << "chunk not available";
       }
+      error.AddInfo("Replicate2");
       throw;
     }
     return chunk_size;
@@ -289,7 +294,7 @@ uint64_t DataManagerService::Replicate(const DataManager::Key& key, nfs::Message
        this, *pmid_name, serialises_value, message_id);
     boost::apply_visitor(send_put_request_visitor, data_name);
   }
-  catch (const maidsafe_error& error) {
+  catch (maidsafe_error& error) {
     if (error.code() == make_error_code(CommonErrors::no_such_element)) {
       LOG(kError) << HexSubstr(key.name.string()) << " not in temp storage ";
       detail::DataManagerGetForReplicationVisitor<DataManagerService>
@@ -366,9 +371,11 @@ void DataManagerService::HandleMessage(
         try {
           db_.Commit(resolved_action->key, resolved_action->action);
         }
-        catch (const maidsafe_error& error) {
-          if (error.code() != make_error_code(CommonErrors::no_such_element))
+        catch (maidsafe_error& error) {
+         if (error.code() != make_error_code(CommonErrors::no_such_element)) {
+            error.AddInfo("ActionDataManagerAddPmid");
             throw;
+         }
         }
       }
       break;
@@ -453,9 +460,10 @@ void DataManagerService::HandleAccountTransfer(const AccountType& account) {
   try {
     db_.HandleTransfer(std::vector<AccountType> {account});
   }
-  catch (const std::exception& error) {
+  catch (maidsafe_error& error) {
     LOG(kError) << "DataManager AcoccountTransfer Failed to store account " << error.what();
-    throw;  // MAID-357
+    error.AddInfo("HandleAccountTransfer");
+    throw;
   }
 }
 
