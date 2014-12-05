@@ -99,7 +99,13 @@ DiskUsage InitialiseDiskRoot(const fs::path& disk_root) {
       }
       catch (...) {
         LOG(kError) << "exception during InitialiseDiskRoot";
+        try {
         BOOST_THROW_EXCEPTION(MakeError(CommonErrors::invalid_parameter));
+        }
+        catch(maidsafe_error& error) {
+          error.AddInfo("111111111111");
+          throw;
+        }
       }
     }
   }
@@ -217,7 +223,13 @@ void ChunkStore::SetMaxDiskUsage(DiskUsage max_disk_usage) {
   if (current_disk_usage_ > max_disk_usage) {
     LOG(kError) << "current_disk_usage_ " << current_disk_usage_.data
                 << " exceeds target max_disk_usage " << max_disk_usage.data;
+    try {
     BOOST_THROW_EXCEPTION(MakeError(CommonErrors::invalid_parameter));
+    }
+    catch(maidsafe_error& error) {
+      error.AddInfo("22222222222");
+      throw;
+    }
   }
   max_disk_usage_ = max_disk_usage;
 }

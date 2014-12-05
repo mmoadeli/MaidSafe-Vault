@@ -276,9 +276,10 @@ uint64_t DataManagerService::Replicate(const DataManager::Key& key, nfs::Message
     catch (maidsafe_error& error) {
       if (error.code() == make_error_code(CommonErrors::no_such_element)) {
         LOG(kVerbose) << "chunk not available";
+      } else {
+        error.AddInfo("Replicate2");
+        throw;
       }
-      error.AddInfo("Replicate2");
-      throw;
     }
     return chunk_size;
   }
