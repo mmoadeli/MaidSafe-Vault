@@ -35,16 +35,29 @@ Implementation:
     }
 
     DataManager<D.name>::HandlePut(D) {
-      [!Exist(D) ? Loop PmidNode in KClosestNodesTo(D.name)
-                       PmidManager<PmidNode.name>::HandlePut(D) ]
+      !Exist(D) ? (Account.Create(D))
+                  (Loop PmidNode in KClosestNodesTo(D.name)
+                     [ D.Account.Add(Pmid), PmidManager<PmidNode.name>::HandlePut(D) ])
+    }
+    
+    DataManager<D.name>::HandlePutFailure(D, Pmid) {
+      EXIST(D) ? (D.Account.Remove(Pmid))
+                 (D.Accout.Pmids.Count < ENOUGH
+                      ? (NewPmid = GetNewPmid())
+                        ([ D.Account.Add(NewPmid), PmidManager<NewPmid.name>::HandlePut(D) ])
+      DownRank(Pmid)   
     }
     
     PmidManager<PmidNode.name>::HandlePut(D) {
-      [ Account.Add(D), PmidNode::HandlePut(D) ]
+      [ Client.Account.Add(D), PmidNode::HandlePut(D) ]
+    }
+    
+    PmidManager<PmidNode.name>::HandlePutFailure(D) {
+      [Client.Account.Subtract(D), DataManager<D.name>::HandlePutFailure(D, Pmid)]
     }
     
     PmidNode::HandlePut(D) {
-      [!Store(D) ? PmidManager<PmidNode.name>::HandleStoreFailure(D) ]
+      [!Store(D) ? PmidManager<PmidNode.name>::HandlePutFailure(D) ]
     }
 
 ### MAID GET
