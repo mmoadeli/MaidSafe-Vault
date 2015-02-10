@@ -22,43 +22,30 @@ all functions are templated on DataType
 
 MAID PUT and MAID PUT CONFIRM
 
-    < MaidNode::Put(D) | MaidManager::HandlePut(D)
-    | DataManager::InstantiateData (Maid, D)
-    | PmidManager::Store(D.name) | PmidNode::Persist(D) >
-
-    < PmidNode::Persist(D) | PmidManager:: ConfirmStoragePromise(D.name)
-    | DataManager::PersistedInVault(D.name, Pmid.name)
-    | MaidManager::AccountCost(Maid, D.name, cost)
-    | MaidNode::ConfirmPut(D.name) >
+    MaidClient::Put(D) | MaidManager<Client.name>::HandlePut(D) | DataManager<D.name>::HandlePut(D) | PmidManager<Pmid.name>::HandlePut(D) | PmidNode::HandlePut(D)
 
 
 Implementation:
 
-    < MaidNode::Put(D) {
-        client_routing.put(D) }
-    | MaidManager::HandlePut(D) {
-        Allow ? ReserveCost(K*D.size())
-                return Flow [ DataManager{D.name}, InstantiateData(Maid, D) ]
-              : return Error [ MaidNode, error::OutOfCredit ] }
-    | DataManager{D.name}::InstantiateData(Maid, D) {
-        ReplicationPmidNodes = SelectKClosestNodesTo(D.name)
-        InstantiateRegister(Maid, D.name, D, ReplicationPmidNodes)
-            // InstantiateRegister excluded from ChurnHandle ?
-            // DM keeps the data in the InstantiateRegister
-            // until it has at least two confirmations
-            // from ReplicationPmidNodes, then it moves Data into LRUcache
-            // This is dealt with in DM::PersistedInVault
-        return Flow [ PmidManager{ReplicationPmidNodes}, Store(D) ] }
-    | PmidManager{ReplicationPmidNode}::Store(D) {
-            //  Only register reversed link upon successful storage
-        IntegrityCheck(D) // eg D.name = H(D) for ImmutableData
-        return Flow [ PmidNode, Persist(D) ]
-    | PmidNode::Persist(D) {
-        PersistInVault(D)
-        on_error return Error [ PmidManager{PmidNode},
-                                error::FailedToStoreInVault(D) ]
-        return Flow [ PmidManager{PmidNode}, ConfirmStoragePromise(D.name) ] }
-    >
+    MaidClient::Put(D) { MaidManager<Client.name>::HandlePut(D) }
+    |
+    MaidManager<Client.name>::HandlePut(D) {
+      Allow ? [ ReserveCost(K*D.size()), DataManager<D.name>::HandlePut(D) ]
+            : [ MaidClient::HandleOutOfCredit ]
+    }
+    |
+    DataManager<D.name>::HandlePut(D) {
+      [!Exist(D) ? Loop PmidNode in KClosestNodesTo(D.name)
+                       PmidManager{PmidNode.name}::HandlePut(D) ]
+    }
+    |
+    PmidManager<PmidNode.name>::HandlePut(D) {
+      [ Account.Add(D), PmidNode::HandlePut(D) ]
+    }
+    |
+    | PmidNode::HandlePut(D) {
+        [!Store(D) ? PmidManager<PmidNode.name>::HandleStoreFailure(D) ]
+    }
 
     < PmidNode::Persist(D) {/* resuming from above */}
     | PmidManager{PmidNode}::ConfirmStoragePromise(D.name) {
