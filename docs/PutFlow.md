@@ -49,7 +49,7 @@ Implementation:
     }
     
     PmidManager<PmidNode.name>::HandlePut(D) {
-      [ Client.Account.Add(D), PmidNode::HandlePut(D) ]
+      [ PmidNode.Account.Add(D), PmidNode::HandlePut(D) ]
     }
     
     PmidManager<PmidNode.name>::HandlePutFailure(D) {
