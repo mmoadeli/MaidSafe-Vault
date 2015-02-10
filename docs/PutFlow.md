@@ -38,36 +38,14 @@ Implementation:
       [!Exist(D) ? Loop PmidNode in KClosestNodesTo(D.name)
                        PmidManager{PmidNode.name}::HandlePut(D) ]
     }
-    |
+    
     PmidManager<PmidNode.name>::HandlePut(D) {
       [ Account.Add(D), PmidNode::HandlePut(D) ]
     }
-    |
-    | PmidNode::HandlePut(D) {
-        [!Store(D) ? PmidManager<PmidNode.name>::HandleStoreFailure(D) ]
+    
+    PmidNode::HandlePut(D) {
+      [!Store(D) ? PmidManager<PmidNode.name>::HandleStoreFailure(D) ]
     }
-
-    < PmidNode::Persist(D) {/* resuming from above */}
-    | PmidManager{PmidNode}::ConfirmStoragePromise(D.name) {
-        Register(PmidNode, D.name)
-        return Flow [ DataManager{D.name}, PersistedInVault(D.name,
-                                                            Pmid.name) ] }
-    | DataManager{D.name}::PersistedInVault(D.name, Pmid.name) {
-        RegisterPmid(D.name, D.size, Pmid.name)
-            // size known from D stored in InstantiateRegister
-        InstantiateRegister.RemovePmid(Pmid.name)
-        RedundantCopies = PmidsRegistered(D.name).size
-        if (RedundantCopies >= 2) {
-          MoveToLRUcache(InstantiateRegister(D.name).getData())
-        }
-        return Flow [ MaidManager{Maid}, AccountCost(Maid,
-                            D.name, RedundantCopies * D.size) ] }
-    | MaidManager{Maid}::AccountCost(Maid, D.name, cost) {
-        PayInSafeCoinUnpaidRemainder(UpdatedCost = cost)
-        return Flow [ MaidNode, PutConfirm(D.name, cost) ] }
-    | MaidNode::PutConfirm(D.name, cost) {
-        Return to higher levels, persistance can be deduced from cost }
-    >
 
 ### MAID GET
 
