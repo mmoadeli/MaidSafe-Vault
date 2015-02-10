@@ -36,7 +36,7 @@ Implementation:
 
     DataManager<D.name>::HandlePut(D) {
       [!Exist(D) ? Loop PmidNode in KClosestNodesTo(D.name)
-                       PmidManager{PmidNode.name}::HandlePut(D) ]
+                       PmidManager<PmidNode.name>::HandlePut(D) ]
     }
     
     PmidManager<PmidNode.name>::HandlePut(D) {
