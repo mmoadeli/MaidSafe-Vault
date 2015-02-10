@@ -28,12 +28,12 @@ MAID PUT and MAID PUT CONFIRM
 Implementation:
 
     MaidClient::Put(D) { MaidManager<Client.name>::HandlePut(D) }
-    |
+
     MaidManager<Client.name>::HandlePut(D) {
       Allow ? [ ReserveCost(K*D.size()), DataManager<D.name>::HandlePut(D) ]
             : [ MaidClient::HandleOutOfCredit ]
     }
-    |
+
     DataManager<D.name>::HandlePut(D) {
       [!Exist(D) ? Loop PmidNode in KClosestNodesTo(D.name)
                        PmidManager{PmidNode.name}::HandlePut(D) ]
