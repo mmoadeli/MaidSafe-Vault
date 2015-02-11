@@ -9,8 +9,9 @@ legend:
     |      sentinel
     D      data
     Manager<Address>
-    ->> send to multiple
-    -> send to one
+    ->> send to multiple non-NAE
+    -> send to one non-NAE
+    Loop x in xs : 
 
 
 ### MAID PUT
