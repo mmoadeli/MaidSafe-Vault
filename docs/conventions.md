@@ -9,5 +9,5 @@
 * condition ? A : B : C/C++ syntax
 * condition ? A : represents _condition ? A : NoOp_
 * ! denotes NOT
-* Manager <Address> : group managing Address
+* Manager < Address > : group managing Address
 * PLoop x in xs : do : represents a parallel loop 
