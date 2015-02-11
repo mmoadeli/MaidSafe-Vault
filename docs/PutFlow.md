@@ -65,7 +65,7 @@ Implementation:
                             ->> | PmidNode::HandleGet(D.name)
                             -> MaidClient::GetResponse(D)
     
-    Implementation
+Implementation
     
     MaidClient::Get(D.name) { DataManager<D.name>::HandleGet(D.name) }
     
