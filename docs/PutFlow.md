@@ -6,15 +6,11 @@ The network allows
 
 legend:
 
-    <      scatter
-    >      gather
     |      sentinel
     D      data
-    H()    Hash512
-    H^n()  n-th Hash512
-    Manager{Address};
-           {Address} omitted where evident,
-           e.g. MaidManagers{MaidNode}
+    Manager<Address>
+    ->> send to multiple
+    -> send to one
 
 
 ### MAID PUT
@@ -24,7 +20,7 @@ MAID PUT and MAID PUT CONFIRM
 
     MaidClient::Put(D) | MaidManager<Client.name>::HandlePut(D)
                        | DataManager<D.name>::HandlePut(D)
-                       | PmidManager<Pmid.name>::HandlePut(D)
+                       ->> | PmidManager<Pmid.name>::HandlePut(D)
                        | PmidNode::HandlePut(D)
 
 
@@ -39,7 +35,7 @@ Implementation:
 
     DataManager<D.name>::HandlePut(D) {
       !Exist(D) ? (Account.Create(D))
-                  (Loop PmidNode in KClosestNodesTo(D.name)
+                  (Loop PmidNode in KClosestNodesTo(D.name) :
                      [ D.Account.Add(Pmid), PmidManager<PmidNode.name>::HandlePut(D) ])
     }
     
@@ -65,16 +61,18 @@ Implementation:
 
 ### MAID GET
 
-    < MaidNode::Get(D.name) {
-        client_routing.get(D.name) }
-    | DataManager{D.name}::HandleGet(D.name, ReplyToClient) {
-        if (LRUcache.get(D.name)) {
-          return Flow [ ReplyToClient, GetResponse(LRUcache.get(D.name)) ]
-        }
-        OnlinePmidNodes = Register.getOnlinePmidNodes(D.name)
-        return Flow [ OnlinePmidNodes, PushForward(D.name, ReplyToClient) ] }
-    | PmidNode{OnlinePmidNode}::PushForward(D.name, ReplyToClient) {
-        return Flow [ ReplyToClient, GetResponse(Vault.get(D.name)) }
-    >
+    MaidClient::Get(D.name) | DataManager<D.name>::HandleGet(D.name)
+                            ->> | PmidNode::HandleGet(D.name)
+                            -> MaidClient::GetResponse(D)
+    
+    Implementation
+    
+    MaidClient::Get(D.name) { DataManager<D.name>::HandleGet(D.name) }
+    
+    DataManager<D.name>::HandleGet(D.name) {
+      EXIST(D) ? [Loop PmidNode in D.Account.PmidNodes : PmidNode::HandleGet(D.name)]
+               : MaidClient::HandleGetFailure(D.name)
+    }
+
 
 ### CHURN HANDLE
