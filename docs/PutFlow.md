@@ -39,7 +39,7 @@ Implementation:
                      [ D.Account.Add(Pmid), PmidManager<PmidNode.name>::HandlePut(D) ])
     }
     
-    DataManager<D.name>::HandlePutFailure(D, Pmid, Failure) {
+    DataManager<D.name>::HandlePutResponse(D, Pmid, Failure) {
       Exist(D) ? (D.Account.Remove(Pmid))
                  (D.Accout.Pmids.Count < ENOUGH
                       ? (NewPmid = GetNewPmid())
