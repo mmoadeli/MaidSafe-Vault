@@ -40,7 +40,7 @@ Implementation:
     }
     
     DataManager<D.name>::HandlePutFailure(D, Pmid, Failure) {
-      EXIST(D) ? (D.Account.Remove(Pmid))
+      Exist(D) ? (D.Account.Remove(Pmid))
                  (D.Accout.Pmids.Count < ENOUGH
                       ? (NewPmid = GetNewPmid())
                         ([ D.Account.Add(NewPmid), PmidManager<NewPmid.name>::HandlePut(D) ])
@@ -70,7 +70,7 @@ Implementation:
     MaidClient::Get(D.name) { DataManager<D.name>::HandleGet(D.name) }
     
     DataManager<D.name>::HandleGet(D.name) {
-      EXIST(D) ? [PLoop PmidNode in D.Account.PmidNodes : PmidNode::HandleGet(D.name)]
+      Exist(D) ? [PLoop PmidNode in D.Account.PmidNodes : PmidNode::HandleGet(D.name)]
                : MaidClient::HandleGetResponse(D.name, Failure)
     }
 
