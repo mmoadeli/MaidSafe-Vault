@@ -1,4 +1,4 @@
-###Terms and conventions
+###Legends
 
 * ->> : represents message to multiple non-NAE
 * -> : represents message to one non-NAE
