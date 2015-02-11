@@ -22,7 +22,10 @@ all functions are templated on DataType
 
 MAID PUT and MAID PUT CONFIRM
 
-    MaidClient::Put(D) | MaidManager<Client.name>::HandlePut(D) | DataManager<D.name>::HandlePut(D) | PmidManager<Pmid.name>::HandlePut(D) | PmidNode::HandlePut(D)
+    MaidClient::Put(D) | MaidManager<Client.name>::HandlePut(D)
+                       | DataManager<D.name>::HandlePut(D)
+                       | PmidManager<Pmid.name>::HandlePut(D)
+                       | PmidNode::HandlePut(D)
 
 
 Implementation:
