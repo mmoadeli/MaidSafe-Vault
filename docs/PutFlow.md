@@ -1,19 +1,6 @@
 
 # MaidSafe Language of the Network
 
-
-The network allows
-
-legend:
-
-    |      sentinel
-    D      data
-    Manager<Address>
-    ->> send to multiple non-NAE
-    -> send to one non-NAE
-    PLoop x in xs :  a parallel loop
-
-
 ### MAID PUT
 all functions are templated on DataType
 
