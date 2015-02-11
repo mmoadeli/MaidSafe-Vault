@@ -11,7 +11,7 @@ legend:
     Manager<Address>
     ->> send to multiple non-NAE
     -> send to one non-NAE
-    Loop x in xs : 
+    PLoop x in xs :  a parallel loop
 
 
 ### MAID PUT
@@ -28,8 +28,9 @@ Implementation:
     MaidClient::Put(D) { MaidManager<Client.name>::HandlePut(D) }
 
     MaidManager<Client.name>::HandlePut(D) {
-      Allow ? [ ReserveCost(K*D.size()), DataManager<D.name>::HandlePut(D) ]
-            : [ MaidClient::HandleOutOfCredit ]
+      Allow ? [ ReserveCost(K*D.size()), { DataManager<D.name>::HandlePut(D),
+                                           MaidClient::HandlePutResponse(success) ]
+            : [ MaidClient::HandlePutResponse(OutOfCredit) ]
     }
 
     DataManager<D.name>::HandlePut(D) {
