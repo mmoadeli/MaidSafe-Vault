@@ -28,8 +28,7 @@ Implementation:
     MaidClient::Put(D) { MaidManager<Client.name>::HandlePut(D) }
 
     MaidManager<Client.name>::HandlePut(D) {
-      Allow ? [ ReserveCost(K*D.size()), { DataManager<D.name>::HandlePut(D),
-                                           MaidClient::HandlePutResponse(success) } ]
+      Allow ? [ ReserveCost(K*D.size()), DataManager<D.name>::HandlePut(D) ]
             : [ MaidClient::HandlePutResponse(OutOfCredit) ]
     }
 
