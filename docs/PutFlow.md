@@ -29,17 +29,17 @@ Implementation:
 
     MaidManager<Client.name>::HandlePut(D) {
       Allow ? [ ReserveCost(K*D.size()), { DataManager<D.name>::HandlePut(D),
-                                           MaidClient::HandlePutResponse(success) ]
+                                           MaidClient::HandlePutResponse(success) } ]
             : [ MaidClient::HandlePutResponse(OutOfCredit) ]
     }
 
     DataManager<D.name>::HandlePut(D) {
       !Exist(D) ? (Account.Create(D))
-                  (Loop PmidNode in KClosestNodesTo(D.name) :
+                  (PLoop PmidNode in KClosestNodesTo(D.name) :
                      [ D.Account.Add(Pmid), PmidManager<PmidNode.name>::HandlePut(D) ])
     }
     
-    DataManager<D.name>::HandlePutFailure(D, Pmid) {
+    DataManager<D.name>::HandlePutFailure(D, Pmid, Failure) {
       EXIST(D) ? (D.Account.Remove(Pmid))
                  (D.Accout.Pmids.Count < ENOUGH
                       ? (NewPmid = GetNewPmid())
@@ -51,12 +51,12 @@ Implementation:
       [ PmidNode.Account.Add(D), PmidNode::HandlePut(D) ]
     }
     
-    PmidManager<PmidNode.name>::HandlePutFailure(D) {
-      [Client.Account.Subtract(D), DataManager<D.name>::HandlePutFailure(D, Pmid)]
+    PmidManager<PmidNode.name>::HandlePutFailure(D, Failure) {
+      [Client.Account.Subtract(D), DataManager<D.name>::HandlePutResponse(D, Pmid, Failure)]
     }
     
     PmidNode::HandlePut(D) {
-      [!Store(D) ? PmidManager<PmidNode.name>::HandlePutFailure(D) ]
+      [!Store(D) ? PmidManager<PmidNode.name>::HandlePutResponse(D, Failure) ]
     }
 
 ### MAID GET
@@ -70,8 +70,8 @@ Implementation:
     MaidClient::Get(D.name) { DataManager<D.name>::HandleGet(D.name) }
     
     DataManager<D.name>::HandleGet(D.name) {
-      EXIST(D) ? [Loop PmidNode in D.Account.PmidNodes : PmidNode::HandleGet(D.name)]
-               : MaidClient::HandleGetFailure(D.name)
+      EXIST(D) ? [PLoop PmidNode in D.Account.PmidNodes : PmidNode::HandleGet(D.name)]
+               : MaidClient::HandleGetResponse(D.name, Failure)
     }
 
 
