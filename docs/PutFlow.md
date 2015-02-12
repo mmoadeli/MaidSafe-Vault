@@ -38,7 +38,7 @@ Implementation:
     }
     
     PmidManager<PmidNode.name>::HandlePutResponse(D, Failure) {
-      [Client.Account.Subtract(D), DataManager<D.name>::HandlePutResponse(D, Pmid, Failure)]
+      [PmidNode.Account.Subtract(D), DataManager<D.name>::HandlePutResponse(D, Pmid, Failure)]
     }
     
     PmidNode::HandlePut(D) {
