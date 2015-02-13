@@ -9,4 +9,4 @@ requires results from `Operation1` and produces results for `Operation3`. `$` ma
 * `condition ? A` represents `condition ? A : no-op`, i.e. if `condition` is false, nothing happens
 * `!` denotes NOT
 * `ManagersOf < Address >` represents the group managing `Address`
-* `Loop x in xs : do` represents a loop
+* `Loop x in xs { do }` represents a loop
