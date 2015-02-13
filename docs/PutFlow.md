@@ -26,8 +26,7 @@ Implementation:
 
     DataManager<D.name>::HandlePut(D) {
       !Exist(D) ? { Account.Create(D),
-                    Loop PmidNode in KClosestNodesTo(D.name) :
-                      { 
+                    Loop PmidNode in KClosestNodesTo(D.name) { 
                         D.Account.Add(Pmid),
                         PmidManager<PmidNode.name>::HandlePut(D)
                       }
@@ -72,7 +71,7 @@ Implementation
     MaidClient::Get(D.name) { DataManager<D.name>::HandleGet(D.name) }
     
     DataManager<D.name>::HandleGet(D.name) {
-      Exist(D) ? Loop PmidNode in D.Account.PmidNodes : PmidNode::HandleGet(D.name)
+      Exist(D) ? Loop PmidNode in D.Account.PmidNodes { PmidNode::HandleGet(D.name) }
                : MaidClient::HandleGetResponse(D.name, Failure)
     }
 
