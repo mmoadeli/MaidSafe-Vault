@@ -70,11 +70,7 @@ routing::HandlePutPostReturn DataManager<FacadeType>::HandlePut(
      auto pmid_addresses(static_cast<FacadeType*>(this)
                              ->template GetClosestNodes<DataType>(data.name()));
     db_.Put<DataType>(data.name(), pmid_addresses);
-    std::vector<routing::DestinationAddress> dest_addresses;
-    for (const auto& pmid_address : pmid_addresses)
-      dest_addresses.emplace_back(std::make_pair(routing::Destination(pmid_address),
-                                                 boost::none));
-    return dest_addresses;
+    return ToDestinationAddresses(pmid_addresses, boost::none);
   }
   return boost::make_unexpected(MakeError(CommonErrors::success));
 }
@@ -124,11 +120,7 @@ DataManager<FacadeType>::Replicate(const typename DataType::Name& name,
   current_pmid_nodes.insert(current_pmid_nodes.end(), new_pmid_nodes.begin(),
                             new_pmid_nodes.end());
   db_.ReplacePmidNodes<DataType>(name, current_pmid_nodes);
-
-  std::vector<routing::DestinationAddress> dest_addresses;
-  for (const auto& pmid_address : new_pmid_nodes)
-    dest_addresses.emplace_back(std::make_pair(routing::Destination(pmid_address), boost::none));
-  return dest_addresses;
+  return ToDestinationAddresses(new_pmid_nodes, boost::none);
 }
 
 template <typename FacadeType>
@@ -142,11 +134,9 @@ routing::HandleGetReturn DataManager<FacadeType>::HandleGet(const routing::Sourc
   if (result.value().empty())
     return boost::make_unexpected(MakeError(CommonErrors::unable_to_handle_request));
 
-  std::vector<routing::DestinationAddress> dest_pmids;
-  for (const auto& holder : *result)
-    dest_pmids.emplace_back(routing::Destination(holder),
-                            boost::optional<routing::ReplyToAddress>(from.node_address.data));
-  return routing::HandleGetReturn::value_type(dest_pmids);
+  return routing::HandleGetReturn::value_type(
+              ToDestinationAddresses(
+                  *result, boost::optional<routing::ReplyToAddress>(from.node_address.data)));
 }
 
 }  // namespace vault

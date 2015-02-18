@@ -123,7 +123,7 @@ routing::HandlePutPostReturn MaidManager<Facade>::HandlePut(
 
   std::vector<routing::DestinationAddress> result;
   result.push_back(std::make_pair(routing::Destination(routing::Address(data.name())),
-                                  boost::optional<routing::ReplyToAddress>()));
+                                  boost::none));
   return routing::HandlePutPostReturn(result);
 }
 
@@ -132,7 +132,7 @@ void MaidManager<Facade>::HandleChurn(
     const routing::CloseGroupDifference& close_group_difference) {
   std::lock_guard<std::mutex> lock(accounts_mutex_);
   std::vector<routing::Address> old_accounts(close_group_difference.first);
-  for (auto& old_account : old_accounts) {
+  for (const auto& old_account : old_accounts) {
     auto it(std::find_if(std::begin(accounts_), std::end(accounts_),
         [=](const MaidManagerAccount& account) {
           return old_account.string() == account.name().value.string();

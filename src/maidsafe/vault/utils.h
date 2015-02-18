@@ -62,6 +62,10 @@ std::string EncodeToString(typename DataType::Name name) {
                               static_cast<uint32_t>(DataType::Tag::kValue))).string();
 }
 
+std::vector<routing::DestinationAddress>
+ToDestinationAddresses(const std::vector<routing::Address>& addresses,
+                       boost::optional<routing::ReplyToAddress> reply_to_address);
+
 struct Parameters {
   static size_t min_pmid_holders;
 };

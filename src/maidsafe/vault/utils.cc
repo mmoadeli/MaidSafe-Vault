@@ -45,6 +45,15 @@ boost::filesystem::path UniqueDbPath(const boost::filesystem::path& vault_root_d
   return (db_root_path / boost::filesystem::unique_path());
 }
 
+std::vector<routing::DestinationAddress>
+ToDestinationAddresses(const std::vector<routing::Address>& addresses,
+                       boost::optional<routing::ReplyToAddress> reply_to_address) {
+  std::vector<routing::DestinationAddress> dest_addresses;
+  for (const auto& address : addresses)
+    dest_addresses.emplace_back(std::make_pair(routing::Destination(address), reply_to_address));
+  return dest_addresses;
+}
+
 size_t Parameters::min_pmid_holders = 4;
 
 }  // namespace vault
