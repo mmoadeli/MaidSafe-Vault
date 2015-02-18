@@ -27,10 +27,7 @@ routing::HandleGetReturn VaultFacade::HandleGet(routing::SourceAddress from,
         Identity data_name) {
   switch (authority) {
     case routing::Authority::client_manager:
-      if (data_type == DataTagValue::kImmutableDataValue)
-        MaidManager::template HandleGet<ImmutableData>(from, data_name);
-      else if (data_type == DataTagValue::kMutableDataValue)
-        return MaidManager::template HandleGet<MutableData>(from, data_name);
+      assert(false);
       break;
     case routing::Authority::nae_manager:
       if (data_type == DataTagValue::kImmutableDataValue)

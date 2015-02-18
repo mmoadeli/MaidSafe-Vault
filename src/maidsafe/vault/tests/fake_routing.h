@@ -48,6 +48,14 @@ class FakeRouting {
                                                 data_name);
   }
 
+  template <typename DataType, typename CompletionToken>
+  PutReturn<CompletionToken> Put(Address /*to*/, DataType /*data*/, CompletionToken token) {
+    PutHandler<CompletionToken> handler(std::forward<decltype(token)>(token));
+    asio::async_result<decltype(handler)> result(handler);
+    handler(MakeError(CommonErrors::success));
+    return result.get();
+  }
+
   template <typename DataType>
   std::vector<routing::Address> GetClosestNodes(
       typename DataType::Name /*name*/,
