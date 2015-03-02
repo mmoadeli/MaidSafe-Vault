@@ -43,7 +43,6 @@ Implementation:
                            PmidManager<NewPmid.name>::HandlePut(D)
                          }
                  }
-      DownRank(Pmid)
     }
     
     PmidManager<PmidNode.name>::HandlePut(D) {
@@ -53,7 +52,7 @@ Implementation:
     
     PmidManager<PmidNode.name>::HandlePutResponse(D, Failure) {
       PmidNode.Account.Subtract(D),
-      DataManager<D.name>::HandlePutResponse(D, Pmid, Failure)
+      DataManager<D.name>::HandlePutResponse(D, Pmid)
     }
     
     PmidNode::HandlePut(D) {
