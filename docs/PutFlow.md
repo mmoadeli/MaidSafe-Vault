@@ -33,7 +33,7 @@ Implementation:
                   }
     }
     
-    DataManager<D.name>::HandlePutResponse(D, Pmid, Failure) {
+    DataManager<D.name>::HandlePutResponse(D, Pmid) {
       Exist(D) ? { 
                    D.Account.Remove(Pmid),
                    D.Accout.Pmids.Count < ENOUGH
